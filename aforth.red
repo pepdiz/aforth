@@ -29,7 +29,6 @@ afm: make object! [
 ;  "swap" ['donative [a: sp/1 b: sp/2 remove/part sp 2 insert sp a insert sp b ]]
 ; ]
 
-
 ;  to evaluate a forth word is to apply fn-class to its body
 
 ;  how to find a word in dictionary?  just accesing the map using the word name (the map key)! 
@@ -109,16 +108,12 @@ afm: make object! [
                   ; word is number? push it, not number? guess what word
                   either number? attempt [n: to-float t] 
                      [insert sp n]
-                     ; ejecutar un word es do reduce [to-word first (select dict w) second (select dict w)]  ;  apply dict/w/1 dict/w/2
+                     ; excute a word is do reduce [to-word first (select dict w) second (select dict w)]  ;  apply dict/w/1 dict/w/2
                      [if none = attempt [w: select dict t do reduce [to-word first w second w]] [throw "word not found"]]
                   t: next t
                 ]
              ]
 
-    ; docolon simplemente tiene que ir pasando por todas las palabras evaluandolas
-          ; el foreach recorre todo el bloque con lo que nos aseguramos que se ejecutan todas, sin necesidad de guardar el return en RP
-          ; foreach w b [ eval w ]
-          ; pero no vamos a usar un foreach porque eval ya hace un while para recorrer el bloque
     docolon: function [b [block!]] [ eval b ] ; just eval the word list (the block)    
     donative: function [b [block!]] [ f: function [] b f ]   ; to do the block first define a function doing the block (because use of local variables in the block) ;-- do b  ;-- do the block since it's a red code block  
       
