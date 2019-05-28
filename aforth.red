@@ -52,7 +52,7 @@ afm: make object! [
  "/" ['donative [a: sp/1 b: sp/2 remove/part sp 2 insert sp b / a]]
  "+" ['donative [a: sp/1 b: sp/2 remove/part sp 2 insert sp a + b]]
  "-" ['donative [a: sp/1 b: sp/2 remove/part sp 2 insert sp b - a]]                                                                             
- "^" ['donative [a: sp/1 b: sp/2 remove/part sp 2 insert sp power b a]]
+ "^^" ['donative [a: sp/1 b: sp/2 remove/part sp 2 insert sp power b a]]
  "sqrt" ['donative [a: sp/1 remove sp insert sp sqrt a]]
  "and" ['donative [a: sp/1 b: sp/2 remove/part sp 2 insert sp a and b]] 
  "or" ['donative [a: sp/1 b: sp/2 remove/part sp 2 insert sp a or b]] 
@@ -67,7 +67,7 @@ afm: make object! [
  "r>" ['donative [insert sp rp/1 remove rp]]
   
   ]
-   	
+      	
 ; parameter stack
     sp: copy []
     
@@ -81,16 +81,16 @@ afm: make object! [
   state: false	
 	
 ; forth primitives
-    next: does []
-    dolist: does []
-    exit: does []
-        
+    next: does []   ; this is eval
+    dolist: does [] ; this is docolon
+    exit: does []   ; not needed, it's implicit in compile function (maybe necessary as a word)
+
 ; REPL, really in forth is REL (read-eval-loop) , no print
     read: does [ tib: copy [] append tib split trim/lines ask "afm> " " " ]
     rel: does [ forever [rp: copy [] read interpret]]
-    interpret: does [eval tib]	; interpret is outer interpreter
+    interpret: does [eval tib]
 
-    compile: function [w [any-word!] t [block!]]
+    compile: function [w [any-word!] t [block!]] [
     ; this function is the compile environment, it consumes tokens compiling them until ; is found (; is consumed too marking the exit of function)          
           f: func [b /local c] [either tail? b [[]] [either ";" = first b [[]] [append reduce [first b] f next b ] ]]
           if none = find t ";" [throw "end of definition [;] expected"] 
@@ -115,8 +115,11 @@ afm: make object! [
                 ]
              ]
 
+    ; docolon simplemente tiene que ir pasando por todas las palabras evaluandolas
+          ; el foreach recorre todo el bloque con lo que nos aseguramos que se ejecutan todas, sin necesidad de guardar el return en RP
+          ; foreach w b [ eval w ]
+          ; pero no vamos a usar un foreach porque eval ya hace un while para recorrer el bloque
     docolon: function [b [block!]] [ eval b ] ; just eval the word list (the block)    
-    donative: function [b [block!] [ f: function [] b f ]   ; to do the block first define a function doing the block (because use of local variables in the block)
-     
-
+    donative: function [b [block!]] [ f: function [] b f ]   ; to do the block first define a function doing the block (because use of local variables in the block) ;-- do b  ;-- do the block since it's a red code block  
+      
 ]
