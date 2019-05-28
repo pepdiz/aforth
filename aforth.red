@@ -67,9 +67,7 @@ afm: make object! [
  "r>" ['donative [insert sp rp/1 remove rp]]
   
   ]
-  
-;  do reduce ['. :. '.s :.s '* :times '/ :div '+ :plus '- :minus 'power :pow 'sqrt :srt 'and :band 'or :bor 'xor :bxor :not :bnot 'drop :drop 'dup :dup 'over :over 'swap :swap 'vlist :vlist]
-     	
+   	
 ; parameter stack
     sp: copy []
     
@@ -87,17 +85,13 @@ afm: make object! [
     dolist: does []
     exit: does []
         
-; internal primitives to make life easy                               
-   find-word: func [w] [select dict w]   
-
 ; REPL, really in forth is REL (read-eval-loop) , no print
     read: does [ tib: copy [] append tib split trim/lines ask "afm> " " " ]
     rel: does [ forever [rp: copy [] read interpret]]
-    interpret: does [eval tib]
+    interpret: does [eval tib]	; interpret is outer interpreter
 
     compile: function [w [any-word!] t [block!]]
     ; this function is the compile environment, it consumes tokens compiling them until ; is found (; is consumed too marking the exit of function)          
-;          f: func [b /local c] [either tail? b [[]] [either ";" = first b [[]] [append reduce [first to-lit-word b] f next b ] ]]
           f: func [b /local c] [either tail? b [[]] [either ";" = first b [[]] [append reduce [first b] f next b ] ]]
           if none = find t ";" [throw "end of definition [;] expected"] 
           if none <> find t ":" [throw "define a new word inside a word definition is not allowed"]
@@ -121,65 +115,8 @@ afm: make object! [
                 ]
              ]
 
-    ; docolon simplemente tiene que ir pasando por todas las palabras evaluandolas
-          ; el foreach recorre todo el bloque con lo que nos aseguramos que se ejecutan todas, sin necesidad de guardar el return en RP
-          ; foreach w b [ eval w ]
-          ; pero no vamos a usar un foreach porque eval ya hace un while para recorrer el bloque
     docolon: function [b [block!]] [ eval b ] ; just eval the word list (the block)    
-    donative: function [b [block!] [ f: function [] b f ]   ; to do the block first define a function doing the block (because use of local variables in the block) ;-- do b  ;-- do the block since it's a red code block  
-      
-
-
-{                
-; forth primitive words (these are words defined in machine language (red) not in forth language itself)    
-    .: does [print sp/1 remove sp]
-    .s: does [print ["[" sp "]"]]
-    times: func [/local a b][a: sp/1 b: sp/2 remove/part sp 2 insert sp (a * b)]
-    div: func [/local a b][a: sp/1 b: sp/2 remove/part sp 2 insert sp b / a] 
-    plus: func [/local a b][a: sp/1 b: sp/2 remove/part sp 2 insert sp a + b]
-    minus: func [/local a b][a: sp/1 b: sp/2 remove/part sp 2 insert sp b - a]                                                                               
-    pow: func [/local a b][a: sp/1 b: sp/2 remove/part sp 2 insert sp power b a]
-    srt: func [/local a][a: sp/1 remove sp insert sp sqrt a]
-    band: func [/local a b][a: sp/1 b: sp/2 remove/part sp 2 insert sp a and b] 
-    bor: func [/local a b][a: sp/1 b: sp/2 remove/part sp 2 insert sp a or b] 
-    bxor: func [/local a b][a: sp/1 b: sp/2 remove/part sp 2 insert sp a xor b] 
-    bnot: func [/local a][a: sp/1 remove sp insert sp not a]
+    donative: function [b [block!] [ f: function [] b f ]   ; to do the block first define a function doing the block (because use of local variables in the block)
      
-    
-    ++: :plus
-    **: :times
-    //: :div
-    --: :minus
-    
-    drop: does [remove sp]
-    dup: does [insert sp sp/1]
-    over: does [insert sp sp/2]
-    swap: does [a: p/1 b: p/2 remove/part sp 2 insert sp a insert sp b]
-    
-    vlist: does [keys-of dict]
-
-; those functions in new format  (dictionary native ones)
-
- "." ['donative [print sp/1 remove sp]]
- ".s" ['donative [print ["[" sp "]"]]]
- "*" ['donative [a: sp/1 b: sp/2 remove/part sp 2 insert sp (a * b)]]
- "/" ['donative [a: sp/1 b: sp/2 remove/part sp 2 insert sp b / a]]
- "+" ['donative [a: sp/1 b: sp/2 remove/part sp 2 insert sp a + b]]
- "-" ['donative [a: sp/1 b: sp/2 remove/part sp 2 insert sp b - a]]                                                                             
- "^" ['donative [a: sp/1 b: sp/2 remove/part sp 2 insert sp power b a]]
- "sqrt" ['donative [a: sp/1 remove sp insert sp sqrt a]]
- "and" ['donative [a: sp/1 b: sp/2 remove/part sp 2 insert sp a and b]] 
- "or" ['donative [a: sp/1 b: sp/2 remove/part sp 2 insert sp a or b]] 
- "xor" ['donative [a: sp/1 b: sp/2 remove/part sp 2 insert sp a xor b]] 
- "not" ['donative [a: sp/1 remove sp insert sp not a]]   
- "drop" ['donative [remove sp]]
- "dup" ['donative [insert sp sp/1]]
- "over" ['donative [insert sp sp/2]]
- "swap" ['donative [a: p/1 b: p/2 remove/part sp 2 insert sp a insert sp b]]
- "vlist" ['donative [keys-of dict]]
-    
-}
- 
-
 
 ]
